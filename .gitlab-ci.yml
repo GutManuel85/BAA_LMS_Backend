@@ -1,0 +1,30 @@
+image: python:3.10
+
+stages:
+  - build
+  - test
+
+variables:
+  DJANGO_SETTINGS_MODULE: "lms_backend.settings"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+before_script:
+  - pip install virtualenv
+  - virtualenv env
+  - source env/bin/activate
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+
+build:
+  stage: build
+  script:
+    - cd lms_backend
+    - python manage.py collectstatic --noinput
+
+test:
+  stage: test
+  script:
+    - cd lms_backend
+    # - python manage.py test --noinput
+    - echo "tests will be executed here"

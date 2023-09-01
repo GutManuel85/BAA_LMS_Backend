@@ -1,0 +1,133 @@
+# ***************** Set up Virtual Environment and Installations *****************
+
+# Install Python: https://www.python.org/downloads/
+
+# Create virtual environment and activate:
+virtualenv env_lms
+env_lms\Scripts\activate
+
+# (If you want to deactivate it again, use the command: deactivate. But don't deactivate it here)
+
+# Install Django
+pip install django
+pip install django-restframework
+pip install django-cors-headers
+pip install django-jazzmin
+pip install django-admin-sortable2
+
+# Install Djoser (used for authentication tokens)
+pip install djoser
+
+# Install Pillow (has to be installed for uploading pictures)
+pip install Pillow
+
+# Install Markdown (has to be installed for styling text from admin Area)
+pip install markdown
+
+
+
+# ***************** Create Project *****************
+
+# Create a new Project:
+django-admin startproject lms_backend
+
+# Make some adjustments in settings.py
+
+# Make some adjustments in urls.py
+
+
+# ***************** Create Database *****************
+cd lms_backend
+
+python manage.py makemigrations
+
+python manage.py migrate
+
+
+# ***************** Create Admin User *****************
+# Create superuser
+python manage.py createsuperuser
+
+
+# ***************** Create App Course *****************
+python manage.py startapp course
+
+
+# ***************** Create a new SECRET_KEY for PROD *****************
+python manage.py shell
+from django.core.management.utils import get_random_secret_key
+print(get_random_secret_key())
+# CRL + Z for leaving the shell
+
+
+# ***************** Run server http*****************
+# Run server (important: env_lms has to be activated!)
+python manage.py runserver
+
+# Admin panel can be seen here: http://127.0.0.1:8000/admin/
+
+
+# ***************** Run server https*****************
+# Run server (important: env_lms has to be activated!)
+python manage.py runserver_plus --cert-file cert.pem --key-file key.pem
+
+# Admin panel can be seen here: http://127.0.0.1:8000/admin/
+
+
+# ***************** Create Requirements.txt file for deployment info *****************
+# In root directory
+pip freeze > requirements.txt
+# !!! remove this from requirements.txt file, because it is only used on Windows and is not working on Linux: twisted-iocpsupport==1.0.3
+
+
+# ***************** Certificate PROD *****************
+# https://letsencrypt.org/de/getting-started/ leads to https://certbot.eff.org/instructions?ws=nginx&os=windows
+# Download and install Certbot: https://dl.eff.org/certbot-beta-installer-win_amd64.exe
+
+
+********** Certificate DEV ***************
+# Main Introductions: https://timonweb.com/django/https-django-development-server-ssl-certificate/
+
+# Install Chocolatey: https://community.chocolatey.org/courses/installation/installing#powershell
+# => Open Powershell as Administrator and paste the command below:
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install mkcert
+choco install mkcert
+
+# Further Installs
+pip install django-extensions Werkzeug
+pip install pyOpenSSL
+
+# Install local certificate authority (CA) (run this in root directory)
+mkcert -install
+
+# Make Certificate
+cd .\lms_backend
+mkcert -cert-file cert.pem -key-file key.pem localhost 127.0.0.1
+
+
+
+********** Start Server ***************
+
+# Start Development server (has to be run in the same directory where the cert.pem and key.pem files and the manage.py file are)
+python manage.py runserver_plus --cert-file cert.pem --key-file key.pem --verbosity 2
+
+
+
+
+# Start ASGI server Daphne for PROD on Port 8443
+
+# First we have to install ASGI Server Daphne
+pip install daphne
+pip install channels
+
+daphne -e ssl:8000:privateKey=key.pem:certKey=cert.pem lms_backend.asgi:application
+
+
+********** Run Tests ***************
+# has to be run in the same directory where the manage.py file is
+python manage.py test
+
+
+
